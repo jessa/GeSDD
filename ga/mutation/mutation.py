@@ -1828,7 +1828,7 @@ class apmi_feat_flip_pct_mutation_global(mutation):
         args = {"changed":False, "old":[], "new":[]}
 
         feats = model.get_features()
-        feats = [f for f in feats if len(f[0].list_of_factors) > 2]
+        feats = [f for f in feats if len(f[0].list_of_factors) > 3]
 
         if len(feats) == 0:
             return model, args
@@ -1910,7 +1910,7 @@ class apmi_feat_flip_pct_mutation_global(mutation):
         if isinstance(feat, conj):
 
             conjunctors = feat.list_of_factors
-            subset_n = select_random_element(list(range(2, len(conjunctors))))
+            subset_n = select_random_element(list(range(2, len(conjunctors)-1)))
 
             candidates = [self.generate_candidate(
                 ratio,
