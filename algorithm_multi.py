@@ -14,6 +14,8 @@ import subprocess
 import sys
 import time
 import math
+import shutil
+import os
 from model_IO import model_io
 
 from datetime import datetime
@@ -292,10 +294,20 @@ def run(params, cnt = False):
 
         params['s1'] = time.time()
 
-        # Call the generating initial population
-        # as a seperate process (hack) to manage
-        # the memory problem
-        call_process("Generation", params)
+        if params['initial_population'] is not None:
+            models_dir = mio.models_dir
+            mio.ensure(models_dir)
+            os.makedirs(models_dir, exist_ok=True)
+
+            if os.path.exists(models_dir):
+                os.rmdir(models_dir)  # hacky solution to deal with copytree problems
+            shutil.copytree(params['initial_population'], models_dir)
+
+        else:
+            # Call the generating initial population
+            # as a seperate process (hack) to manage
+            # the memory problem
+            call_process("Generation", params)
 
         # perform iterations
         n_resets = math.ceil(params['n_gens'] / params['it_before_restart'])

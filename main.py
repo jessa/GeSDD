@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser(description='''GeSDD is a genetic algorithm for
 parser.add_argument('-train', required = True, help='The train data set')
 parser.add_argument('-valid', required = True, help='The validation data set')
 parser.add_argument('-test', required = False, help='The test data set', default=None)
-
+parser.add_argument('-init_pop', required = False, help='The path of the directory with the initial population', default=None)
 parser.add_argument('-run_folder',
                     required = False,
                     help=
@@ -263,6 +263,7 @@ def __main__(args):
     params['valid_file'] = args.valid
     params['test_file'] = args.test
     params['candidate_size'] = args.candidate_size
+    params['initial_population'] = args.init_pop
 
     # Run the algorithm, this is whare all of the work is performed.
     pop, params= ga_algorithm.run(params, cnt = (args.cnt == "yes"))
