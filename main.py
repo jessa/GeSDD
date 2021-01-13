@@ -45,6 +45,8 @@ parser = argparse.ArgumentParser(description='''GeSDD is a genetic algorithm for
                                                 ''')
 parser.add_argument('-train', required = True, help='The train data set')
 parser.add_argument('-valid', required = True, help='The validation data set')
+parser.add_argument('-test', required = False, help='The test data set', default=None)
+
 parser.add_argument('-run_folder',
                     required = False,
                     help=
@@ -145,8 +147,10 @@ def __main__(args):
     print("Using data files!")
     train_path = args.train
     valid_path = args.valid
+    test_path = args.test
     train, n_worlds_train, n_vars = IO_manager.read_from_csv(train_path, ',')
     valid, n_worlds_valid, n_vars = IO_manager.read_from_csv(valid_path, ',')
+    test = None if test_path is None else IO_manager.read_from_csv(test_path, ',')[0]
 
     n_worlds = n_worlds_train + n_worlds_valid
     test_train_ratio = n_worlds_valid / n_worlds
@@ -181,6 +185,7 @@ def __main__(args):
     # This is done for efficiency reasons
     train = cmgr.compress_data_set(train, "train")
     valid = cmgr.compress_data_set(valid, "valid")
+    test = None if test is None else cmgr.compress_data_set(test, "test")
 
     # Select the feature generator. If seeded, the feature generator by
     # Jan van Haaren et al. If not seeded, use the random subset feature
@@ -205,6 +210,7 @@ def __main__(args):
     params = {}
     params['run_folder'] = args.run_folder
     params['run_name'] = args.run_name
+    params['results'] = os.path.join(args.run_folder, args.run_name, 'results.csv')
     params['model_io'] = model_io(args.run_folder, args.run_name)
     params['empty_model'] = empty_model
     params['tmp_path'] = os.path.join("tmp_out", args.run_name)
@@ -242,6 +248,7 @@ def __main__(args):
     params['pop_size'] = args.population_size
     params['train'] = train
     params['valid'] = valid
+    params['test'] = test
     params['mutate_probability'] = args.mutate_p
     params['n_gens'] = args.n_gens
     params['it_before_restart'] = args.n_gens
@@ -254,6 +261,7 @@ def __main__(args):
     params['current_best'] = -1
     params['train_file'] = args.train
     params['valid_file'] = args.valid
+    params['test_file'] = args.test
     params['candidate_size'] = args.candidate_size
 
     # Run the algorithm, this is whare all of the work is performed.

@@ -87,6 +87,7 @@ def iteration_call(args):
     pop_size = args['pop_size']
     train = args['train']
     valid = args['valid']
+    test_data = args['test']
     mpr = args['mutate_probability']
     n_gen = args['n_gens']
     n_select = args['n_select']
@@ -183,18 +184,24 @@ def iteration_call(args):
         nb_facts = [model.nb_factors for model in population]
         best_nb_factors = nb_facts[np.argmax(population_fitness)]
 
-        best_index = np.argmax(population_fitness)
+        # best_index = np.argmax(population_fitness) # original Michiel's Thesis
+        best_index = np.argmax(validation_fitness)  # Change by Jessa
         best_fit_v = validation_fitness[best_index]
         best_fit_t = population_fitness[best_index]
         best_ll_t = lls_t[best_index]
         best_ll_v = lls_v[best_index]
         best_model = population[best_index].soft_clone()    # not hard clone
+        if test_data is not None:
+            best_ll_test = best_model.LL(test_data, "test")
         feature_sizes = [[len(f.all_conjoined_literals()) for (f,_,_,_) in mdl.get_features()] for mdl in population]
         cmgrs = [m.count_manager for m in population]
+        best_size = sizes[best_index]
 
-        if best_fit_t > args["current_best"]:
+        # if best_fit_t > args["current_best"]:
+        if best_fit_v > args["current_best"]:
             mio.save_best_model(population[best_index])
-            args["current_best"] = best_fit_t
+            # args["current_best"] = best_fit_t
+            args["current_best"] = best_fit_v
 
         t9 = time.time()
         tmr.t("info_gather")
@@ -206,9 +213,11 @@ def iteration_call(args):
             mdl.mgr.garbage_collect()
 
         book.post(gen, "ll_t", lls_t)
-        book.post(gen, "fit_t",population_fitness)
+        book.post(gen, "fit_t", population_fitness)
         book.post(gen, "ll_v", lls_v)
         book.post(gen, "fit_v", validation_fitness)
+        if test_data is not None:
+            book.post(gen, "best_ll_test", best_ll_test)
         book.post(gen, "time: selection", t2- t1)
         book.post(gen, "time: nothing", t3- t2)
         book.post(gen, "time: pairing", t4- t3)
@@ -220,8 +229,8 @@ def iteration_call(args):
         book.post(gen, "time", t9 - t1)
         book.post(gen, "time: extra", t9 - t8)
         book.post(gen, "sizes", sizes)
-        book.post(gen, "best_size", sizes[np.argmax(population_fitness)])
-        book.post(gen, "best_ind", population[np.argmax(population_fitness)].to_string())
+        book.post(gen, "best_size", best_size)
+        book.post(gen, "best_ind", population[best_index].to_string())
         book.post(gen, "nb_factors", nb_facts)
         book.post(gen, "best_nb_factors", best_nb_factors)
         book.post(gen, "indicator_profile", imgr.profile())
@@ -260,6 +269,9 @@ def iteration_call(args):
 
 
         mio.write_to_tmp(args['tmp_path'], best_str_stats, sum_str_stats, sum_str_times)
+        print(f'{gen},{t9 - t1},{best_ll_t},{best_ll_v},{best_ll_test if test_data is not None else ""},{best_size}',
+              file=open(args['results'], 'a+'))
+
         print(best_str_stats)
 
     multiprog_fitter.clean_tmp_dir(args['run_name'])
@@ -288,16 +300,17 @@ def run(params, cnt = False):
         # perform iterations
         n_resets = math.ceil(params['n_gens'] / params['it_before_restart'])
         params['current_it'] = 0
+        print(f'it,time,train LL,valid LL,test LL,nb edges', file=open(params['results'], 'w+'))
         for i in range(n_resets):
-            params['current_it'] = params['current_it'] + params['it_before_restart']
             params = call_process("Iteration", params)
+            params['current_it'] = params['current_it'] + params['it_before_restart']
 
     else:
         params = mio.load_args()
         n_resets = math.ceil(params['n_gens'] / params['it_before_restart'])
         for i in range(n_resets):
-            params['current_it'] = params['current_it'] + params['it_before_restart']
             params = call_process("Iteration", params)
+            params['current_it'] = params['current_it'] + params['it_before_restart']
 
     return mio.load_models(), mio.load_args()
 

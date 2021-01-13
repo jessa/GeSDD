@@ -4,3 +4,4 @@ run/
 current_runs/*
 data/*
 exp_run/
+.idea
