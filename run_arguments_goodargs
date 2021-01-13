@@ -1,0 +1,19 @@
+python main.py \
+-train data/nltcs/nltcs.ts.data \
+-valid data/nltcs/nltcs.valid.data \
+-run_folder run_initialized_test \
+-run_name nltcs \
+-generator seeded \
+-init_pop initial_populations/nltcs/models \
+-threshold 0.5\
+-candidate_size 3 \
+-gamma_mutations 0.08 \
+-gamma_cross 0.08 \
+-alpha 5e-6 \
+-population_size 52\
+-mutate_p 0.8 \
+-n_gens 500 \
+-cnt no \
+-max_nb_f 300 \
+-tournament_size 3
+
