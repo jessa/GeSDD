@@ -6,3 +6,6 @@ data/*
 exp_run/
 .idea
 .ipynb_checkpoints
+runs_*
+gesdd_env*
+initial_populations
