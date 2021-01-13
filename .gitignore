@@ -5,3 +5,4 @@ current_runs/*
 data/*
 exp_run/
 .idea
+.ipynb_checkpoints
